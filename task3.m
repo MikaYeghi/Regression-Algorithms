@@ -14,7 +14,7 @@ global etha
 global tau
 global grad_cutoff
 global max_iter
-etha = 1e-2; % optimization hyperparameter
+etha = 8e-4; % optimization hyperparameter
 tau = 1e-5; % tau for smoothing
 grad_cutoff = 1e-6; % gradient below this value is considered to be zero
 max_iter = 5e3; % maximum number of iterations in gradient descent
@@ -117,13 +117,14 @@ grid on;
 str = sprintf('lambda = %d', lambda);
 title(str);
 xlim([0 max_iter]);
-%ylim([0 cost]);
+ylim([0 cost]);
 xlabel('Iterations')
 ylabel('Objective function')
 i = 1; % counter
 while i <= max_iter && change >= grad_cutoff
     grad = compute_gradient(w, lambda, Phi, y, n, d); % update gradient
     change = cost;
+    old_w = w; % old_w store the previous value of w
     w = w - etha * grad; % update vector w
     old_cost = cost; % old_cost stores the previous value of cost
     cost = compute_objective_function(w, lambda, Phi, y, n); % update current cost function
@@ -155,16 +156,16 @@ end
 
 % compute_objective_function - computes objective function for given w
     function J = compute_objective_function(w, lambda, Phi, y, n)
-       J = 0; % initialize at 0
-       
-       % 2nd term
-       j = 1;
-       while j <= n
-          J = J + abs(Phi(j, :) * w - y(j));
-           j = j + 1;
-       end
-       J = J / n;
-       
+        J = 0; % initialize at 0
+        
+        % 2nd term
+        j = 1;
+        while j <= n
+            J = J + abs(Phi(j, :) * w - y(j));
+            j = j + 1;
+        end
+        J = J / n;
+        
         % 1st term
         J = J + lambda / 2 * (sign(w)' * w);
     end
