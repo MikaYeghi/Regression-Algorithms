@@ -14,10 +14,10 @@ global etha
 global tau
 global grad_cutoff
 global max_iter
-etha = 3e-3; % optimization hyperparameter
+etha = 5e-3; % optimization hyperparameter
 tau = 1e-5; % tau for smoothing
-grad_cutoff = 1e-5; % gradient below this value is considered to be zero
-max_iter = 1e3; % maximum number of iterations in gradient descent
+grad_cutoff = 1e-6; % gradient below this value is considered to be zero
+max_iter = 2e3; % maximum number of iterations in gradient descent
 
 %lambdas = [1e-3, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3];
 lambda = 1e-3;
@@ -134,12 +134,6 @@ while i <= max_iter && abs(change) >= grad_cutoff
     clc;
     change
     
-    if change <= grad_cutoff
-        w = old_w + etha * grad;
-        cost = compute_objective_function(w, lambda, Phi, y, n); % update current cost function
-        change = cost - old_cost;
-    end
-    
     % plotting
     hold on
     plot([i - 1, i], [old_cost, cost], 'r');
@@ -153,7 +147,7 @@ end
         grad = zeros(d, 1);
         j = 1;
         while j <= n
-            grad = grad + sign(Phi(j, :) * w - y(j)) * (Phi(j, :) * w - y(j)); % second term
+            grad = grad + sign(Phi(j, :) * w - y(j)) * Phi(j, :)'; % second term
             j = j + 1;
         end
         grad = grad / n;
