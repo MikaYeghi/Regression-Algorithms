@@ -4,9 +4,9 @@ clc
 
 % main code
 clear
-file_path = 'california.txt'; % path to the file
+file_path = 'boston.txt'; % path to the file
 global data_fraction; % fraction of data that's being read
-data_fraction = 0.01;
+data_fraction = 1;
 D = retrieve_data(file_path); % retrieve entire data into D
 frac1 = 0.8;
 frac2 = 0.8;
@@ -14,10 +14,11 @@ global etha
 global tau
 global grad_cutoff
 global max_iter
-etha = 1e-5; % optimization hyperparameter
+etha = 5e-3; % optimization hyperparameter
 tau = 1e-5; % tau for smoothing
 grad_cutoff = 1e-6; % gradient below this value is considered to be zero
-max_iter = 1e3; % maximum number of iterations in gradient descent
+max_iter = 1e4; % maximum number of iterations in gradient descent
+
 %lambdas = [1e-3, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3];
 lambda = 1e-3;
 [trainval_D, test_D] = random_split(D, frac1); % split data set into trainval/test sets
@@ -98,101 +99,74 @@ end
 % smoothed_l1_regression - find best estimate based on l1 regression
 function w = smoothed_l1_regression(train_set, lambda)
 % variables
-col_num = length(train_set); % number of columns
+col_num = length(train_set(1, :)); % number of columns
 global etha
-global tau
 global grad_cutoff
 global max_iter
-A = train_set(:, 1:(col_num - 1)); % forming matrix A
-b = train_set(:, (col_num - 1):col_num); % forming vector b
+Phi = train_set(:, 1:(col_num - 1)); % forming matrix Phi
+y = train_set(:, col_num); % forming vector y
+n = length(Phi); % number of records
+d = length(Phi(1, :)); % number of parameters
+w = zeros(d, 1); % initialize zero vector for w
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-% variables
-col_num = length(train_set(1,:)); % number of columns
-
-A = train_set(:, 1:(col_num - 1)); % form matrix A
-b = train_set(:, col_num); % form vector b
-w_0 = zeros(col_num - 1, 1); % initial w_0
-w_old = w_0; % first w_old
-f_ith = (compute_objective_function(A, b, w_0, lambda)); % this matrix will store f_ith's
-change = 1e4; % set to some random large value here
-
-close all;
+grad = compute_gradient(w, lambda, Phi, y, n, d); % compute initial gradient
+cost = compute_objective_function(w, lambda, Phi, y, n); % compute initial objective function
+change = 1e6; % variables standing for the change of the cost function over one iteration. Initially set to a very large value
 figure;
+grid on;
 str = sprintf('lambda = %d', lambda);
 title(str);
 xlim([0 max_iter]);
-%ylim([0 f_ith(1)]);
+ylim([0 cost]);
 xlabel('Iterations')
 ylabel('Objective function')
-i = 2; % counter
-while i <= max_iter && change >= grad_cutoff % allow at most 500 iterations
-    grad = compute_gradient(A, b, w_old, tau);
-    w_new = w_old - etha * grad; % find the new value of w
-    w_old = w_new; % update the value of w_old
+i = 1; % counter
+while i <= max_iter && change >= grad_cutoff
+    grad = compute_gradient(w, lambda, Phi, y, n, d); % update gradient
+    change = cost; 
+    w = w - etha * grad; % update vector w
+    cost = compute_objective_function(w, lambda, Phi, y, n); % update current cost function
+    change = change - cost;
     
-    f_ith = [f_ith, compute_objective_function(A, b, w_new, lambda)]; % update array f_ith
-    change = f_ith(i - 1) - f_ith(i);
+    % outputting the change value
+    clc;
+    change
+    
     % plotting
     hold on
-    plot([i - 1, i], [f_ith(i - 1), f_ith(i)], 'r'); % plotting
+    plot(i, cost, 'rx');
     drawnow;
     
-    i = i + 1;
+    i = i + 1; % counter increment
 end
 
-w = w_new;
-
-% nested functions
-    function f = compute_objective_function(A, b, w, lambda)
-        f = 0;
-        n = length(A);
-        q = 1; % counter
-        while q <= n
-            f = f + abs(A(q,:) * w - b(q));
-            q = q + 1;
+% compute_gradient - computes gradient for given w
+    function grad = compute_gradient(w, lambda, Phi, y, n, d)
+        grad = zeros(d, 1);
+        j = 1;
+        while j <= n
+            grad = grad + sign(Phi(j, :) * w - y(j)) * (Phi(j, :) * w - y(j)); % second term
+            j = j + 1;
         end
-        f = f / n * 2 / lambda; % times 2/lambda since later it's multiplied by lambda/2
-        q = 1;
-        while q <= length(w)
-            f = f + abs(w(q));
-            q = q + 1;
-        end
-        f = f * lambda / 2;
+        grad = grad / n;
+        grad = grad + lambda / 2 * sign(w); % first element
     end
 
-    function grad_f = compute_gradient(A, b, w, tau)
-        n = length(A); % number of records
-        d = length(w); % number of parameters
-        grad_f = zeros(d, 1); % initialize the gradient vector
-        first_component = lambda / 2 * sign(w); % lambda component; 1 if w(i) > 0, -1 if <0, 0 if 0
-        second_component = grad_f; % n component
-        
-        k = 1; % counter
-        while k <= n
-            power = (A(k,:) * w - b(k)) / tau;
-            second_component = second_component + tanh(power) * A(1,:)';
-            k = k + 1;
-        end
-        second_component = second_component / n;
-        
-        grad_f = first_component + second_component;
+% compute_objective_function - computes objective function for given w
+    function J = compute_objective_function(w, lambda, Phi, y, n)
+       J = 0; % initialize at 0
+       
+       % 2nd term
+       j = 1;
+       while j <= n
+          J = J + abs(Phi(j, :) * w - y(j));
+           j = j + 1;
+       end
+       J = J / n;
+       
+        % 1st term
+        J = J + lambda / 2 * (sign(w)' * w);
     end
-
 end
 
 % compute_mean_abs_error - computes mean absolute error
