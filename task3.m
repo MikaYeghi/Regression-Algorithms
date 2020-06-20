@@ -14,10 +14,10 @@ global etha
 global tau
 global grad_cutoff
 global max_iter
-etha = 5e-3; % optimization hyperparameter
+etha = 1e-2; % optimization hyperparameter
 tau = 1e-5; % tau for smoothing
 grad_cutoff = 1e-6; % gradient below this value is considered to be zero
-max_iter = 1e4; % maximum number of iterations in gradient descent
+max_iter = 5e3; % maximum number of iterations in gradient descent
 
 %lambdas = [1e-3, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3];
 lambda = 1e-3;
@@ -117,14 +117,15 @@ grid on;
 str = sprintf('lambda = %d', lambda);
 title(str);
 xlim([0 max_iter]);
-ylim([0 cost]);
+%ylim([0 cost]);
 xlabel('Iterations')
 ylabel('Objective function')
 i = 1; % counter
 while i <= max_iter && change >= grad_cutoff
     grad = compute_gradient(w, lambda, Phi, y, n, d); % update gradient
-    change = cost; 
+    change = cost;
     w = w - etha * grad; % update vector w
+    old_cost = cost; % old_cost stores the previous value of cost
     cost = compute_objective_function(w, lambda, Phi, y, n); % update current cost function
     change = change - cost;
     
@@ -134,7 +135,7 @@ while i <= max_iter && change >= grad_cutoff
     
     % plotting
     hold on
-    plot(i, cost, 'rx');
+    plot([i - 1, i], [old_cost, cost], 'r');
     drawnow;
     
     i = i + 1; % counter increment
