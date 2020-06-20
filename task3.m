@@ -14,9 +14,9 @@ global etha
 global tau
 global grad_cutoff
 global max_iter
-etha = 5e-3; % optimization hyperparameter
+etha = 1e-2; % optimization hyperparameter
 tau = 1e-5; % tau for smoothing
-grad_cutoff = 1e-6; % gradient below this value is considered to be zero
+grad_cutoff = 5e-6; % gradient below this value is considered to be zero
 max_iter = 2e3; % maximum number of iterations in gradient descent
 
 %lambdas = [1e-3, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3];
