@@ -4,7 +4,7 @@ clc
 
 % main code
 clear
-file_path = 'boston.txt'; % path to the file
+file_path = 'california.txt'; % path to the file
 global data_fraction; % fraction of data that's being read
 data_fraction = 1;
 D = retrieve_data(file_path); % retrieve entire data into D
@@ -14,10 +14,10 @@ global etha
 global tau
 global grad_cutoff
 global max_iter
-etha = 8e-4; % optimization hyperparameter
+etha = 3e-3; % optimization hyperparameter
 tau = 1e-5; % tau for smoothing
-grad_cutoff = 1e-6; % gradient below this value is considered to be zero
-max_iter = 5e3; % maximum number of iterations in gradient descent
+grad_cutoff = 1e-5; % gradient below this value is considered to be zero
+max_iter = 1e3; % maximum number of iterations in gradient descent
 
 %lambdas = [1e-3, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3];
 lambda = 1e-3;
@@ -121,7 +121,7 @@ ylim([0 cost]);
 xlabel('Iterations')
 ylabel('Objective function')
 i = 1; % counter
-while i <= max_iter && change >= grad_cutoff
+while i <= max_iter && abs(change) >= grad_cutoff
     grad = compute_gradient(w, lambda, Phi, y, n, d); % update gradient
     change = cost;
     old_w = w; % old_w store the previous value of w
@@ -133,6 +133,12 @@ while i <= max_iter && change >= grad_cutoff
     % outputting the change value
     clc;
     change
+    
+    if change <= grad_cutoff
+        w = old_w + etha * grad;
+        cost = compute_objective_function(w, lambda, Phi, y, n); % update current cost function
+        change = cost - old_cost;
+    end
     
     % plotting
     hold on
