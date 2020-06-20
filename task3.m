@@ -98,11 +98,32 @@ end
 % smoothed_l1_regression - find best estimate based on l1 regression
 function w = smoothed_l1_regression(train_set, lambda)
 % variables
-col_num = length(train_set(1,:)); % number of columns
+col_num = length(train_set); % number of columns
 global etha
 global tau
 global grad_cutoff
 global max_iter
+A = train_set(:, 1:(col_num - 1)); % forming matrix A
+b = train_set(:, (col_num - 1):col_num); % forming vector b
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+% variables
+col_num = length(train_set(1,:)); % number of columns
+
 A = train_set(:, 1:(col_num - 1)); % form matrix A
 b = train_set(:, col_num); % form vector b
 w_0 = zeros(col_num - 1, 1); % initial w_0
