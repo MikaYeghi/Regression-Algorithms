@@ -4,11 +4,11 @@ clc
 
 % main code
 global data_fraction; % fraction of data that's being used
-data_fraction = 0.1;
+data_fraction = 1;
 file_path = 'california.txt';
 D = retrieve_data(file_path); % retrieve data
 frac1 = 0.8; % fraction of data that's trainval
-frac2 = 0.4; % fraction if trainval that's train
+frac2 = 0.8; % fraction if trainval that's train
 lambda = 1e-3; % lambda for the loss function
 [trainval_D, test_D] = random_split(D, frac1);
 [train_D, val_D] = random_split(trainval_D, frac2);
@@ -98,29 +98,10 @@ w = w(1:d); % extract the values for w
 % functions
 % generates matrix A for linprog
     function A = generate_A(Phi, d, n)
-        A = zeros(2 * (n + d), 2 * d + n); % first make A a matrix of zeros, then fill it
-        % filling the values
-        A(1:d, 1:d) = ones(d);
-        A(1:d, (d+1):(2*d)) = -ones(d);
-        A((d+1):(2*d), 1:d) = -ones(d);
-        A((d+1):(2*d), (d+1):(2*d)) = -ones(d);
-        A((2*d+1):(2*d+n), 1:d) = Phi;
-        A((2*d+n+1):(2*(d+n)), 1:d) = -Phi;
-        A((2*d+1):(2*d+n), (2*d+1):(2*d+n)) = -ones(n);
-        A((2*d+n+1):(2*(d+n)), (2*d+1):(2*d+n)) = -ones(n);
-        % display
-        %         A(1:d, 1:d)
-        %         A(1:d, d+1:2*d)
-        %         A(1:d, 2*d+1:2*d+n)
-        %         A(d+1:2*d, 1:d)
-        %         A(d+1:2*d, d+1:2*d)
-        %         A(d+1:2*d, 2*d+1:2*d+n)
-        %         A(2*d+1:2*d+n, 1:d)
-        %         A(2*d+1:2*d+n, d+1:2*d)
-        %         A(2*d+1:2*d+n, 2*d+1:2*d+n)
-        %         A(2*d+n+1:2*(d+n), 1:d)
-        %         A(2*d+n+1:2*(d+n), d+1:2*d)
-        %         A(2*d+n+1:2*(d+n), 2*d+1:2*d+n)
+       A = [eye(d), -eye(d), zeros(d, n)]; % first row
+       A = [A; -eye(d), -eye(d), zeros(d, n)]; % second row
+       A = [A; Phi, zeros(n, d), -eye(n)]; % third row
+       A = [A; -Phi, zeros(n, d), -eye(n)]; % fourth row
     end
 
 % generates vector b for linprog
